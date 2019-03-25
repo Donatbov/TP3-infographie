@@ -22,6 +22,7 @@
         var earthGroup = null;
         var moonGroup = null;
         var curTime = Date.now();
+        cameraAngle = 0;
 
         // This function is called whenever the document is loaded
         function init() {
@@ -157,14 +158,26 @@
             moonGroup.rotation.y  += angle / 28;      // la lune tourne en 28 jours autour de la terre
             //moon.rotation.y       -= angle /28;       // et en 28 jours aussi sur elle-même pour faire face à la terre
             // (nb, ici on en a pas besoin car tout est relatif)
+            //lock la caméra sur la Terre :
+            //camera.lookAt( earth.matrixWorld.getPosition() );
+            //parcours de la caméra en ellipse
+            cameraAngle += 0.01;
+            camera.position.z = 3 * Math.cos( cameraAngle );
+            camera.position.x = 5 * Math.sin( cameraAngle );
+
+
         }
 
     </script>
 </head>
 <body>
 <div id="info"> a first three.js example</div>
+<!-- Config Vivien
 <canvas id="webglcanvas" style="border: none;background-color:#000000"
         width="1400" height="900"></canvas>
+-->
+<canvas id="webglcanvas" style="border: none;background-color:#000000"
+width="1400" height="650"></canvas>
 <!-- We run the WebGL code at the end to be sure that the document is loaded.
   -->
 <script>
