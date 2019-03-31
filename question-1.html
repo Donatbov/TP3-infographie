@@ -8,7 +8,8 @@
     <script src="three.js"></script>
     <script src="js/Detector.js"></script>
     <script src="js/OrbitControls.js"></script>
-    <script src="js/Planets.js"></script>
+    <script src="js/QuickHull.js"></script>
+    <script src="js/ConvexGeometry.js"></script>
     <script type="text/javascript">
 
         // Checks that your browser supports WebGL.
@@ -22,13 +23,20 @@
         var mercury = null;
         var earth = null;
         var moon = null;
+        var asteroids = [];
         var solarGroup = null;
         var mercuryGroup = null;
         var venusGroup = null;
         var earthGroup = null;
         var moonGroup = null;
+        var astGroup = null;
         var curTime = Date.now();
+        const NBASTEROIDS = 100;
         cameraAngle = 0;
+
+        function getRandomInt(min, max) {
+            return min + Math.floor(Math.random() * Math.floor(max-min));
+        }
 
         // This function is called whenever the document is loaded
         function init() {
@@ -144,7 +152,7 @@
             // First, create the texture map
             var earthMapUrl = "images/earth_atmos_2048.jpg";
             var earthMap = new THREE.TextureLoader().load(earthMapUrl);
-            var orbiteTerre = 20;
+            var orbiteTerre = 16;
 
             // Now, create a Basic material; pass in the map
             var earthMaterial = new THREE.MeshPhongMaterial({map: earthMap});
@@ -188,6 +196,35 @@
             //moon.add(moonAxis);
 
 
+
+            // Create Asteroids
+            var mapAstUrl = "images/asteroid_texture.jpg";
+
+            var mapAst = new THREE.TextureLoader().load(mapAstUrl);
+
+            var materialAst = new THREE.MeshPhongMaterial({map: mapAst});
+
+            var numAst;
+            for (numAst = 0; numAst< NBASTEROIDS; numAst++) {
+                var points = [];
+                var i;
+                for (i = 0; i <= getRandomInt(4, 15); i++) {
+                    points[i] = new THREE.Vector3(Math.random(), Math.random(), Math.random());
+                }
+
+                var geometryAst = new THREE.ConvexGeometry(points);
+
+                ast = new THREE.Mesh(geometryAst, materialAst);
+
+                ast.position.x = 20;
+
+                ast.castShadow = true;
+                ast.receiveShadow = true;
+
+                asteroids [numAst] = ast;
+            }
+
+
             // Add objects into groups
             solarGroup = new THREE.Group();
             mercuryGroup = new THREE.Group();
@@ -195,6 +232,7 @@
             earthGroup = new THREE.Group();
             moonGroup =  new THREE.Group();
             moonGroup.position.x = orbiteTerre; // Pareil que la terre
+            astGroup =  new THREE.Group();
 
             // Finally, add the groups to our scene
             mercuryGroup.add(mercury);
@@ -202,10 +240,17 @@
             moonGroup.add(moon);
             earthGroup.add(moonGroup);
             earthGroup.add(earth);
+            for (numAst = 0; numAst< NBASTEROIDS; numAst++) {
+                asteroid =  new THREE.Group();
+                asteroid.add(asteroids[numAst]);
+                asteroid.rotation.y = numAst * (2* Math.PI / NBASTEROIDS);
+                astGroup.add(asteroid);
+            }
+            solarGroup.add(sun);
             solarGroup.add(mercuryGroup);
             solarGroup.add(venusGroup);
             solarGroup.add(earthGroup);
-            solarGroup.add(sun);
+            solarGroup.add(astGroup);
             scene.add(solarGroup);
             scene.add(light);
             scene.background = textureCube;
@@ -248,6 +293,13 @@
             venus.rotation.y      += - angle / 117;   // et en 117 jours sur elle-même (et dans le sens inverse qui plus est!)
             earth.rotation.y      += angle;           // et en un jour sur elle-même
             moonGroup.rotation.y  += angle / 28;      // la lune tourne en 28 jours autour de la terre
+
+            for (numAst = 0; numAst< NBASTEROIDS; numAst++) {
+                asteroids[numAst].rotation.x += angle /28 * Math.random();
+                asteroids[numAst].rotation.y += angle /28 * Math.random();
+                asteroids[numAst].rotation.z += angle /28 * Math.random();
+            }
+            astGroup.rotation.y  += angle / 200;      // la lune tourne en 28 jours autour de la terre
             //moon.rotation.y       -= angle /28;       // et en 28 jours aussi sur elle-même pour faire face à la terre
             // (nb, ici on en a pas besoin car tout est relatif)
             //lock la caméra sur la Terre
