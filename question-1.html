@@ -8,6 +8,7 @@
     <script src="three.js"></script>
     <script src="js/Detector.js"></script>
     <script src="js/OrbitControls.js"></script>
+    <script src="js/Planets.js"></script>
     <script type="text/javascript">
 
         // Checks that your browser supports WebGL.
@@ -42,8 +43,19 @@
             scene = new THREE.Scene();
             // Add a camera so we can view the scene
             camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 1, 4000);
-            camera.position.y = 25;
+            camera.position.z = 25;
             camera.lookAt(0,-1,0);
+
+            // Param for orbits control for camera
+            orbite = new THREE.OrbitControls( camera, renderer.domElement );
+            // orbite.addEventListener( 'change', render );
+            // call this only in static scenes (i.e., if there is no animation loop)
+            orbite.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+            orbite.enablePan = false;
+            orbite.dampingFactor = 0.25;
+            orbite.screenSpacePanning = false;
+            orbite.minDistance = 2;
+            orbite.maxDistance = 25;
 
 
             // Create Earth
@@ -61,13 +73,12 @@
             earth = new THREE.Mesh(earthGeometry, earthMaterial);
 
             // Set earth inclinaison
-            earth.rotation.y = Math.PI / 5;
             earth.rotation.x = Math.PI / 5;
 
             earth.position.x = 10;
 
-            var earthAxis = new THREE.AxesHelper(5);
-            earth.add(earthAxis);
+            //var earthAxis = new THREE.AxesHelper(5);
+            //earth.add(earthAxis);
 
 
             // Create Sun
@@ -83,8 +94,8 @@
             // And put the geometry and material together into a mesh
             sun = new THREE.Mesh(sunGeometry, sunMaterial);
 
-            var worldAxis = new THREE.AxesHelper(5);
-            sun.add(worldAxis);
+            //var worldAxis = new THREE.AxesHelper(5);
+            //sun.add(worldAxis);
 
             // Add a white point light
             light = new THREE.PointLight(0xffffff, 1.5);
@@ -103,34 +114,37 @@
             moon = new THREE.Mesh(geometryMoon, materialMoon);
             moon.position.x = 2;
 
-            var moonAxis = new THREE.AxesHelper(5);
-            moon.add(moonAxis);
+            //var moonAxis = new THREE.AxesHelper(5);
+            //moon.add(moonAxis);
 
 
+            // Add background
+            var path = "images/MilkyWay/";
+            var format = '.jpg';
+            var urls = [
+                path + 'posx' + format, path + 'negx' + format,
+                path + 'posy' + format, path + 'negy' + format,
+                path + 'posz' + format, path + 'negz' + format
+            ];
+            var textureCube    = new THREE.CubeTextureLoader().load( urls );
+            textureCube.format = THREE.RGBFormat;
             // Add objects into groups
             solarGroup = new THREE.Group();
+
+
             earthGroup = new THREE.Group();
             moonGroup =  new THREE.Group();
             moonGroup.position.x = 10; // Pareil que la terre
-
             // Finally, add the groups to our scene
             moonGroup.add(moon);
+
             earthGroup.add(moonGroup);
             earthGroup.add(earth);
             solarGroup.add(earthGroup);
             solarGroup.add(sun);
             scene.add(solarGroup);
             scene.add(light);
-
-            orbite = new THREE.OrbitControls( camera, renderer.domElement );
-            //orbite.addEventListener( 'change', render );
-            // call this only in static scenes (i.e., if there is no animation loop)
-            orbite.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-            orbite.enablePan = false;
-            orbite.dampingFactor = 0.25;
-            orbite.screenSpacePanning = false;
-            orbite.minDistance = 2;
-            orbite.maxDistance = 25;
+            scene.background   = textureCube;
         }
 
         // This function is called regularly to update the canvas webgl.
@@ -160,14 +174,14 @@
             var fracTime = deltaTime / 1000; // in seconds
             // Now we can move objects, camera, etc.
             // Example: rotation earth
-            var angle = 10* Math.PI * 2 * fracTime; // one turn per second.
+            var angle =    10 * Math.PI * 2 * fracTime; // one turn per second.
             sun.rotation.y         += angle / 27;     // le soleil tourne sur lui même en environ 27 jours
                                                       // (nb en réalité c'est plus complexe, il tourne plus il tourne plus rapidement à l'équateur qu'aux pôles)
             earthGroup.rotation.y += angle / 365;     // la terre tourne en 365 jours
-            earth.rotation.y      += angle / 24;           // et en un jour sur elle-même
+            earth.rotation.y      += angle;           // et en un jour sur elle-même
             moonGroup.rotation.y  += angle / 28;      // la lune tourne en 28 jours autour de la terre
             //moon.rotation.y       -= angle /28;       // et en 28 jours aussi sur elle-même pour faire face à la terre
-            // (nb, ici on en a pas besoin car tout est relatif)
+                                                    // (nb, ici on en a pas besoin car tout est relatif)
             //lock la caméra sur la Terre
             //camera.lookAt( earth.matrixWorld.getPosition() );
             //parcours de la caméra en ellipse
@@ -176,7 +190,7 @@
             //camera.position.x = 5 * Math.sin( cameraAngle );
             //controles à la souris
             orbite.update();
-            orbite.target = earth.matrixWorld.getPosition();
+            orbite.target = sun.matrixWorld.getPosition();
 
 
         }
@@ -185,12 +199,18 @@
 </head>
 <body>
 <div id="info"> a first three.js example</div>
-<!-- Config Vivien
+<!-- Config Vivien -->
+
 <canvas id="webglcanvas" style="border: none;background-color:#000000"
         width="1400" height="900"></canvas>
--->
+
+
+<!-- Config Shepy -->
+<!--
 <canvas id="webglcanvas" style="border: none;background-color:#000000"
 width="1400" height="650"></canvas>
+-->
+
 <!-- We run the WebGL code at the end to be sure that the document is loaded.
   -->
 <script>
