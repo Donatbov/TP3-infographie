@@ -37,15 +37,20 @@
                 canvas: canvas,
                 antialias: true
             });
+
             // Set the viewport size
             renderer.setSize(canvas.width, canvas.height);
+            renderer.shadowMap.enabled = true;
+            // rendu coûteux mais plus joli (default: THREE.PCFShadowMap)
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
             // Create a new Three.js scene
             scene = new THREE.Scene();
+
             // Add a camera so we can view the scene
             camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 1, 4000);
             camera.position.z = 25;
             camera.lookAt(0,-1,0);
-
             // Param for orbits control for camera
             orbite = new THREE.OrbitControls( camera, renderer.domElement );
             // orbite.addEventListener( 'change', render );
@@ -77,6 +82,9 @@
 
             earth.position.x = 10;
 
+            earth.castShadow = true;
+            earth.receiveShadow = true;
+
             //var earthAxis = new THREE.AxesHelper(5);
             //earth.add(earthAxis);
 
@@ -99,7 +107,13 @@
 
             // Add a white point light
             light = new THREE.PointLight(0xffffff, 1.5);
-
+            // this light can display shadow
+            light.castShadow = true;
+            // On peut aussi paramétrer la qualité du calcul
+            light.shadow.mapSize.width = 512;  // default
+            light.shadow.mapSize.height = 512; // default
+            light.shadow.camera.near = 0.5;    // default
+            light.shadow.camera.far = 50;
 
 
             // Create Moon
@@ -112,7 +126,11 @@
             var geometryMoon = new THREE.SphereGeometry(0.5, 30, 30);
 
             moon = new THREE.Mesh(geometryMoon, materialMoon);
+
             moon.position.x = 2;
+
+            moon.castShadow = true;
+            moon.receiveShadow = true;
 
             //var moonAxis = new THREE.AxesHelper(5);
             //moon.add(moonAxis);
