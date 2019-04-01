@@ -97,14 +97,11 @@
             // Now, create a Basic material; pass in the map
             var sunMaterial = new THREE.MeshBasicMaterial({map: sunMap});
 
-            // Create the earth geometry
+            // Create the sun geometry
             var sunGeometry = new THREE.SphereGeometry(4, 30, 30);
 
             // And put the geometry and material together into a mesh
             sun = new THREE.Mesh(sunGeometry, sunMaterial);
-
-            //var worldAxis = new THREE.AxesHelper(5);
-            //sun.add(worldAxis);
 
             // Add a white point light
             light = new THREE.PointLight(0xffffff, 1.5);
@@ -115,6 +112,9 @@
             light.shadow.mapSize.height = 512; // default
             light.shadow.camera.near = 0.5;    // default
             light.shadow.camera.far = 50;
+
+            //var worldAxis = new THREE.AxesHelper(5);
+            //sun.add(worldAxis);
 
 
             // Create Mercury
@@ -334,24 +334,22 @@
             // Example: rotation earth
             var angle =    10 * Math.PI * 2 * fracTime; // one turn per second.
             sun.rotation.y         += angle / 27;     // le soleil tourne sur lui même en environ 27 jours
-                                                      // (nb en réalité c'est plus complexe, il tourne plus il tourne plus rapidement à l'équateur qu'aux pôles)
+                                                      // (nb: en réalité c'est plus complexe, il tourne plus rapidement à l'équateur qu'aux pôles)
             earthGroup.rotation.y += angle / 365;     // la terre tourne en 365 jours
+            earth.rotation.y      += angle;           // et en un jour sur elle-même
             mercuryGroup.rotation.y += angle / 88;    // Mercure tourne en 88 jours
             mercury.rotation.y      += angle / 58;    // et en 58 jours sur elle-même
             venusGroup.rotation.y += angle / 225;     // Venus tourne en 225 jours
             venus.rotation.y      += - angle / 117;   // et en 117 jours sur elle-même (et dans le sens inverse qui plus est!)
-            earth.rotation.y      += angle;           // et en un jour sur elle-même
             moonGroup.rotation.y  += angle / 28;      // la lune tourne en 28 jours autour de la terre
             for (numAst = 0; numAst< NBASTEROIDS; numAst++) {
-
                 asteroids[numAst].rotation.x += angle /28 * Math.random();  // so smooth
                 asteroids[numAst].rotation.y += angle /28 * Math.random();
                 asteroids[numAst].rotation.z += angle /28 * Math.random();
             }
             astGroup.rotation.y  += angle / 200;      // oh yes
-
-            jupiterGroup.rotation.y += angle / 4335;    // Jupiter tourne en 11 ans
-            jupiter.rotation.y      += angle / 0.42;    // et en 10 h sur elle-même
+            jupiterGroup.rotation.y += angle / 4335;  // Jupiter tourne en 11 ans autour du soleil
+            jupiter.rotation.y      += angle / 0.42;  // et en 10 h sur elle-même
 
             //lock la caméra sur la Terre
             //camera.lookAt( sun.matrixWorld.getPosition() );
@@ -361,12 +359,11 @@
             //camera.position.z = 3 * Math.cos( cameraAngle );
             //camera.position.x = 5 * Math.sin( cameraAngle );
 
+            // Comet
             options.position.x = Math.sin( angle * spawnerOptions.horizontalSpeed ) * 20;
             options.position.y = Math.sin( angle * spawnerOptions.verticalSpeed ) * 10;
             options.position.z = Math.sin( angle * spawnerOptions.horizontalSpeed + spawnerOptions.verticalSpeed ) * 5;
             for ( var x = 0; x < spawnerOptions.spawnRate * fracTime; x ++ ) {
-                // Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
-                // their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
                 particleSystem.spawnParticle( options );
             }
             particleSystem.update(angle);
@@ -388,7 +385,7 @@
         width="1400" height="900"></canvas>
 
 
-<!-- Config Shepy -->
+<!-- Config Cédric -->
 <!--
 <canvas id="webglcanvas" style="border: none;background-color:#000000"
 width="1400" height="650"></canvas>
