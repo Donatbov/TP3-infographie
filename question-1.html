@@ -10,6 +10,7 @@
     <script src="js/OrbitControls.js"></script>
     <script src="js/QuickHull.js"></script>
     <script src="js/ConvexGeometry.js"></script>
+    <script src="js/GPUParticleSystem.js"></script>
     <script type="text/javascript">
 
         // Checks that your browser supports WebGL.
@@ -24,12 +25,14 @@
         var earth = null;
         var moon = null;
         var asteroids = [];
+        var jupiter = null;
         var solarGroup = null;
         var mercuryGroup = null;
         var venusGroup = null;
         var earthGroup = null;
         var moonGroup = null;
         var astGroup = null;
+        var jupiterGroup = null;
         var curTime = Date.now();
         const NBASTEROIDS = 100;
         cameraAngle = 0;
@@ -72,7 +75,7 @@
             orbite.dampingFactor = 0.25;
             orbite.screenSpacePanning = false;
             orbite.minDistance = 2;
-            orbite.maxDistance = 25;
+            orbite.maxDistance = 100;
 
 
             // Add background
@@ -225,6 +228,48 @@
             }
 
 
+            // Create Jupiter
+            var mapJupiterUrl = "images/2k_jupiter.jpg";
+
+            var mapJupiter = new THREE.TextureLoader().load(mapJupiterUrl);
+
+            var materialJupiter = new THREE.MeshPhongMaterial({map: mapJupiter});
+
+            var geometryJupiter = new THREE.SphereGeometry(2, 30, 30);
+
+            jupiter = new THREE.Mesh(geometryJupiter, materialJupiter);
+
+            jupiter.position.x = 30;
+
+            jupiter.castShadow = true;
+            jupiter.receiveShadow = true;
+
+
+            // Create comet (import module not working :'( )
+            particleSystem = new THREE.GPUParticleSystem( {
+                maxParticles: 250000
+            } );
+            // options passed during each spawned
+            options = {
+                position: new THREE.Vector3(),
+                positionRandomness: .3,
+                velocity: new THREE.Vector3(),
+                velocityRandomness: .5,
+                color: 0xaa88ff,
+                colorRandomness: .2,
+                turbulence: .5,
+                lifetime: 2,
+                size: 5,
+                sizeRandomness: 1
+            };
+            spawnerOptions = {
+                spawnRate: 15000,
+                horizontalSpeed: 1.5,
+                verticalSpeed: 1.33,
+                timeScale: 1
+            };
+
+
             // Add objects into groups
             solarGroup = new THREE.Group();
             mercuryGroup = new THREE.Group();
@@ -233,6 +278,7 @@
             moonGroup =  new THREE.Group();
             moonGroup.position.x = orbiteTerre; // Pareil que la terre
             astGroup =  new THREE.Group();
+            jupiterGroup =  new THREE.Group();
 
             // Finally, add the groups to our scene
             mercuryGroup.add(mercury);
@@ -246,13 +292,16 @@
                 asteroid.rotation.y = numAst * (2* Math.PI / NBASTEROIDS);
                 astGroup.add(asteroid);
             }
+            jupiterGroup.add(jupiter)
             solarGroup.add(sun);
             solarGroup.add(mercuryGroup);
             solarGroup.add(venusGroup);
             solarGroup.add(earthGroup);
             solarGroup.add(astGroup);
+            solarGroup.add(jupiterGroup);
             scene.add(solarGroup);
             scene.add(light);
+            scene.add( particleSystem );
             scene.background = textureCube;
         }
 
@@ -293,21 +342,35 @@
             venus.rotation.y      += - angle / 117;   // et en 117 jours sur elle-même (et dans le sens inverse qui plus est!)
             earth.rotation.y      += angle;           // et en un jour sur elle-même
             moonGroup.rotation.y  += angle / 28;      // la lune tourne en 28 jours autour de la terre
-
             for (numAst = 0; numAst< NBASTEROIDS; numAst++) {
-                asteroids[numAst].rotation.x += angle /28 * Math.random();
+
+                asteroids[numAst].rotation.x += angle /28 * Math.random();  // so smooth
                 asteroids[numAst].rotation.y += angle /28 * Math.random();
                 asteroids[numAst].rotation.z += angle /28 * Math.random();
             }
-            astGroup.rotation.y  += angle / 200;      // la lune tourne en 28 jours autour de la terre
-            //moon.rotation.y       -= angle /28;       // et en 28 jours aussi sur elle-même pour faire face à la terre
-            // (nb, ici on en a pas besoin car tout est relatif)
+            astGroup.rotation.y  += angle / 200;      // oh yes
+
+            jupiterGroup.rotation.y += angle / 4335;    // Jupiter tourne en 11 ans
+            jupiter.rotation.y      += angle / 0.42;    // et en 10 h sur elle-même
+
             //lock la caméra sur la Terre
             //camera.lookAt( sun.matrixWorld.getPosition() );
+
             //parcours de la caméra en ellipse
             //cameraAngle += 0.01;
             //camera.position.z = 3 * Math.cos( cameraAngle );
             //camera.position.x = 5 * Math.sin( cameraAngle );
+
+            options.position.x = Math.sin( angle * spawnerOptions.horizontalSpeed ) * 20;
+            options.position.y = Math.sin( angle * spawnerOptions.verticalSpeed ) * 10;
+            options.position.z = Math.sin( angle * spawnerOptions.horizontalSpeed + spawnerOptions.verticalSpeed ) * 5;
+            for ( var x = 0; x < spawnerOptions.spawnRate * fracTime; x ++ ) {
+                // Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
+                // their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
+                particleSystem.spawnParticle( options );
+            }
+            particleSystem.update(angle);
+
             //controles à la souris
             orbite.update();
             orbite.target = sun.matrixWorld.getPosition();
