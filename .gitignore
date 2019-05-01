@@ -1,5 +1,7 @@
 .idea/
+DonatBouillud_Caballol_TP3_infographie/
 node_modules/
 *.json
 *.dox
+.tar.gz
 commandes.txt
